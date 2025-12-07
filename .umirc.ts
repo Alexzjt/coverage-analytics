@@ -8,7 +8,6 @@ export default defineConfig({
   request: {},
   layout: {
     title: '覆盖率统计',
-    locale: false,
   },
   routes: [
     {
@@ -27,4 +26,5 @@ export default defineConfig({
     },
   ],
   npmClient: 'pnpm',
+  favicons: ['https://www.hx168.com.cn/favicon.ico'],
 });
