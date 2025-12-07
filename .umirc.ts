@@ -9,7 +9,6 @@ export default defineConfig({
   layout: {
     title: '覆盖率统计',
     locale: false,
-    menuRender: false,
   },
   routes: [
     {
