@@ -7,7 +7,9 @@ export default defineConfig({
   initialState: {},
   request: {},
   layout: {
-    title: '@umijs/max',
+    title: '覆盖率统计',
+    locale: false,
+    menuRender: false,
   },
   routes: [
     {
@@ -20,14 +22,9 @@ export default defineConfig({
       component: './Home',
     },
     {
-      name: '权限演示',
-      path: '/access',
-      component: './Access',
-    },
-    {
-      name: ' CRUD 示例',
-      path: '/table',
-      component: './Table',
+      name: '覆盖率详情',
+      path: '/coverage-detail',
+      component: './CoverageDetail',
     },
   ],
   npmClient: 'pnpm',
