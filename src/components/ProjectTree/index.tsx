@@ -65,6 +65,7 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
   const handleSelect = (keys: React.Key[]) => {
     setSelectedKeys(keys);
     onSelect?.(keys);
+    window.open(`http://10.80.232.101:8899/${keys[0]}/index.html`, '_blank');
   };
 
   return (

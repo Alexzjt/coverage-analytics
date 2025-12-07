@@ -15,7 +15,8 @@
     "@ant-design/pro-components": "^2.4.4",
     "@umijs/max": "^4.6.5",
     "antd": "^5.4.0",
-    "echarts": "^6.0.0"
+    "echarts": "^6.0.0",
+    "react-split-pane": "^0.1.92"
   },
   "devDependencies": {
     "@types/react": "^18.0.33",

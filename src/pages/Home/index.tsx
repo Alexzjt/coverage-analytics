@@ -6,6 +6,7 @@ import PieChart from '@/components/charts/PieChart';
 import ProjectTree from '@/components/ProjectTree';
 import { message } from 'antd';
 import React, { useState } from 'react';
+import SplitPane from 'react-split-pane';
 import styles from './index.less';
 
 const HomePage: React.FC = () => {
@@ -32,28 +33,38 @@ const HomePage: React.FC = () => {
 
   return (
     <div className={styles.homePage}>
-      {/* 左侧导航栏 */}
-      <ProjectTree
-        onNewProject={handleNewProject}
-        onSelect={handleTreeSelect}
-      />
+      <SplitPane
+        split="vertical"
+        defaultSize={'25vw'}
+        primary="first"
+        style={{
+          top: 0,
+        }}
+        minSize={250}
+      >
+        {/* 左侧导航栏 */}
+        <ProjectTree
+          onNewProject={handleNewProject}
+          onSelect={handleTreeSelect}
+        />
 
-      {/* 右侧内容区 */}
-      <div className={styles.mainContent}>
-        <div className={styles.chartsGrid}>
-          {/* 左上：环形图 */}
-          <PieChart />
+        {/* 右侧内容区 */}
+        <div className={styles.mainContent}>
+          <div className={styles.chartsGrid}>
+            {/* 左上：环形图 */}
+            <PieChart />
 
-          {/* 右上：折线图 */}
-          <LineChart />
+            {/* 右上：折线图 */}
+            <LineChart />
 
-          {/* 左下：垂直柱状图 */}
-          <BarChart />
+            {/* 左下：垂直柱状图 */}
+            <BarChart />
 
-          {/* 右下：水平柱状图 */}
-          <HorizontalBarChart />
+            {/* 右下：水平柱状图 */}
+            <HorizontalBarChart />
+          </div>
         </div>
-      </div>
+      </SplitPane>
 
       {/* 新增项目弹窗 */}
       <AddProject
