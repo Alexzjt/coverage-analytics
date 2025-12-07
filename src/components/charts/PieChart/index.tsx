@@ -5,11 +5,13 @@ import styles from './index.less';
 interface PieChartProps {
   title?: string;
   data?: Array<{ value: number; name: string; itemStyle?: { color: string } }>;
+  onClick?: (e: any) => void;
 }
 
 const PieChart: React.FC<PieChartProps> = ({
   title = '各系统已录入项目数量统计',
   data,
+  onClick,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -87,7 +89,7 @@ const PieChart: React.FC<PieChartProps> = ({
   }, [data]);
 
   return (
-    <div className={styles.chartContainer}>
+    <div className={styles.chartContainer} onClick={onClick}>
       <div className={styles.chartTitle}>{title}</div>
       <div className={styles.chartContent}>
         <div ref={chartRef} className={styles.chart} />

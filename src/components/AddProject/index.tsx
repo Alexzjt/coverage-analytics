@@ -320,9 +320,6 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
         )}
 
         <div className={styles.formActions}>
-          <Button onClick={handleCancel} className={styles.btnCancel}>
-            取消
-          </Button>
           <Button
             type="primary"
             onClick={handleSave}

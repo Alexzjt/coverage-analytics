@@ -6,12 +6,14 @@ interface LineChartProps {
   title?: string;
   data?: number[];
   xAxisData?: string[];
+  onClick?: (e: any) => void;
 }
 
 const LineChart: React.FC<LineChartProps> = ({
   title = '按时间录入项目数量统计',
   data,
   xAxisData,
+  onClick,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -115,7 +117,7 @@ const LineChart: React.FC<LineChartProps> = ({
   }, [data, xAxisData]);
 
   return (
-    <div className={styles.chartContainer}>
+    <div className={styles.chartContainer} onClick={onClick}>
       <div className={styles.chartTitle}>{title}</div>
       <div className={styles.chartContent}>
         <div ref={chartRef} className={styles.chart} />

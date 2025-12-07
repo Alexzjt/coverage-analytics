@@ -7,6 +7,7 @@ import ProjectTree from '@/components/ProjectTree';
 import { message } from 'antd';
 import React, { useState } from 'react';
 import SplitPane from 'react-split-pane';
+import { history } from 'umi';
 import styles from './index.less';
 
 const HomePage: React.FC = () => {
@@ -52,16 +53,26 @@ const HomePage: React.FC = () => {
         <div className={styles.mainContent}>
           <div className={styles.chartsGrid}>
             {/* 左上：环形图 */}
-            <PieChart />
+            <PieChart
+              onClick={() => history.push('/coverage-detail?sortBy=firstLevel')}
+            />
 
             {/* 右上：折线图 */}
-            <LineChart />
+            <LineChart
+              onClick={() => history.push('/coverage-detail?sortBy=createTime')}
+            />
 
             {/* 左下：垂直柱状图 */}
-            <BarChart />
+            <BarChart
+              onClick={() => history.push('/coverage-detail?sortBy=createTime')}
+            />
 
             {/* 右下：水平柱状图 */}
-            <HorizontalBarChart />
+            <HorizontalBarChart
+              onClick={() =>
+                history.push('/coverage-detail?sortBy=lineCoverage')
+              }
+            />
           </div>
         </div>
       </SplitPane>

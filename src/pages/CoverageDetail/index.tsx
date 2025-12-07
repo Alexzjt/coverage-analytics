@@ -5,6 +5,7 @@ import {
   ProTable,
 } from '@ant-design/pro-components';
 import React, { useRef } from 'react';
+import { useSearchParams } from 'umi';
 
 // 1. 定义数据类型
 interface DataItem {
@@ -42,6 +43,7 @@ const MOCK_DATA: DataItem[] = Array.from({ length: 20 }).map((_, i) => {
 
 const TableList: React.FC = () => {
   const actionRef = useRef<ActionType>();
+  let [searchParams] = useSearchParams();
 
   const columns: ProColumns<DataItem>[] = [
     {
@@ -64,6 +66,8 @@ const TableList: React.FC = () => {
         'AI 研发': { text: 'AI 研发' },
       },
       sorter: true, // 开启排序
+      defaultSortOrder:
+        searchParams.get('sortBy') === 'firstLevel' ? 'descend' : undefined,
     },
     {
       title: '所属二级分类',
@@ -78,6 +82,8 @@ const TableList: React.FC = () => {
       hideInSearch: true,
       sorter: true, // 开启排序
       width: 200,
+      defaultSortOrder:
+        searchParams.get('sortBy') === 'createTime' ? 'descend' : undefined,
     },
     {
       title: '行覆盖率',
@@ -86,6 +92,8 @@ const TableList: React.FC = () => {
       sorter: true, // 开启排序
       width: 150,
       render: (_, record) => `${record.lineCoverage}%`,
+      defaultSortOrder:
+        searchParams.get('sortBy') === 'lineCoverage' ? 'descend' : undefined,
     },
     {
       title: '分支覆盖率',

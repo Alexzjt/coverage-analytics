@@ -9,12 +9,14 @@ interface BarChartProps {
     instructionCoverage: number[];
   };
   xAxisData?: string[];
+  onClick?: (e: any) => void;
 }
 
 const BarChart: React.FC<BarChartProps> = ({
   title = '最近录入N个项目的覆盖率指标',
   data,
   xAxisData,
+  onClick,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -119,7 +121,7 @@ const BarChart: React.FC<BarChartProps> = ({
   }, [data, xAxisData]);
 
   return (
-    <div className={styles.chartContainer}>
+    <div className={styles.chartContainer} onClick={onClick}>
       <div className={styles.chartTitle}>{title}</div>
       <div className={styles.chartContent}>
         <div ref={chartRef} className={styles.chart} />

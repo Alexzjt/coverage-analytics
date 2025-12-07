@@ -9,12 +9,14 @@ interface HorizontalBarChartProps {
     instructionCoverage: number[];
   };
   yAxisData?: string[];
+  onClick?: (e: any) => void;
 }
 
 const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   title = '行覆盖率指标最高的N个项目统计',
   data,
   yAxisData,
+  onClick,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
@@ -119,7 +121,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   }, [data, yAxisData]);
 
   return (
-    <div className={styles.chartContainer}>
+    <div className={styles.chartContainer} onClick={onClick}>
       <div className={styles.chartTitle}>{title}</div>
       <div className={styles.chartContent}>
         <div ref={chartRef} className={styles.chart} />
