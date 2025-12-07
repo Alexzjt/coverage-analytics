@@ -9,8 +9,6 @@ export async function getInitialState(): Promise<{ name: string }> {
 export const layout = () => {
   return {
     logo: 'https://www.hx168.com.cn/favicon.ico',
-    menu: {
-      locale: false,
-    },
+    pure: true,
   };
 };
