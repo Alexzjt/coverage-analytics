@@ -16,8 +16,6 @@ const PieChart: React.FC<PieChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-
-
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -38,13 +36,24 @@ const PieChart: React.FC<PieChartProps> = ({
         itemWidth: 16,
         itemHeight: 16,
       },
+      color: [
+        '#5470c6',
+        '#91cc75',
+        '#fac858',
+        '#ee6666',
+        '#73c0de',
+        '#3ba272',
+        '#fc8452',
+        '#9a60b4',
+        '#ea7ccc',
+      ],
       series: [
         {
           name: '项目数量',
           type: 'pie',
-          radius: ['40%', '70%'],
-          center: ['60%', '50%'],
-          avoidLabelOverlap: false,
+          radius: ['35%', '60%'],
+          center: ['50%', '50%'],
+          avoidLabelOverlap: true,
           itemStyle: {
             borderRadius: 4,
             borderColor: '#fff',

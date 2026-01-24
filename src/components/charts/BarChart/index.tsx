@@ -21,8 +21,6 @@ const BarChart: React.FC<BarChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-
-
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -54,7 +52,11 @@ const BarChart: React.FC<BarChartProps> = ({
       xAxis: {
         type: 'category',
         data: xAxisData || [],
-        axisLabel: {},
+        axisLabel: {
+          interval: 0,
+          width: 80,
+          overflow: 'break',
+        },
         axisLine: {
           lineStyle: {
             color: '#d9d9d9',
@@ -64,9 +66,11 @@ const BarChart: React.FC<BarChartProps> = ({
       yAxis: {
         type: 'value',
         min: 0,
-        max: 60,
-        interval: 10,
-        axisLabel: {},
+        max: 100,
+        interval: 20,
+        axisLabel: {
+          formatter: '{value} %',
+        },
         axisLine: {
           lineStyle: {
             color: '#d9d9d9',

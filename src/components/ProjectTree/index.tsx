@@ -1,6 +1,6 @@
 import { Button, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getBusinessTree } from '../../services/business';
 import styles from './index.less';
 
@@ -76,13 +76,15 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
         </Button>
       </div>
       <div className={styles.treeMenu}>
-        <Tree
-          treeData={treeData}
-          selectedKeys={selectedKeys}
-          onSelect={handleSelect}
-          defaultExpandAll
-          blockNode
-        />
+        {treeData.length > 0 && (
+          <Tree
+            treeData={treeData}
+            selectedKeys={selectedKeys}
+            onSelect={handleSelect}
+            defaultExpandAll
+            blockNode
+          />
+        )}
       </div>
     </div>
   );

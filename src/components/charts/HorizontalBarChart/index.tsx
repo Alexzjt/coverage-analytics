@@ -21,8 +21,6 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-
-
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -54,9 +52,11 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
       xAxis: {
         type: 'value',
         min: 0,
-        max: 80,
-        interval: 10,
-        axisLabel: {},
+        max: 100,
+        interval: 20,
+        axisLabel: {
+          formatter: '{value} %',
+        },
         axisLine: {
           lineStyle: {
             color: '#d9d9d9',

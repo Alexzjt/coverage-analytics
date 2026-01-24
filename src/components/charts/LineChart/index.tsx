@@ -18,8 +18,6 @@ const LineChart: React.FC<LineChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-
-
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -56,9 +54,6 @@ const LineChart: React.FC<LineChartProps> = ({
       },
       yAxis: {
         type: 'value',
-        min: 0,
-        max: 25,
-        interval: 5,
         axisLabel: {},
         axisLine: {
           lineStyle: {
