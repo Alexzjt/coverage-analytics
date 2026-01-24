@@ -37,6 +37,19 @@ const BarChart: React.FC<BarChartProps> = ({
         axisPointer: {
           type: 'shadow',
         },
+        formatter: (params: any) => {
+          let res = params[0].name + '<br/>';
+          params.forEach((item: any) => {
+            res +=
+              item.marker +
+              ' ' +
+              item.seriesName +
+              ': ' +
+              item.value +
+              ' %<br/>';
+          });
+          return res;
+        },
       },
       legend: {
         data: ['行覆盖率', '分支覆盖率'],
