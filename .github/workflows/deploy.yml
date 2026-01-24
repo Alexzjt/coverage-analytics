@@ -3,7 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # 当推送到 main 分支时触发
+      - main # 当推送到 main 分支时触发
 
 jobs:
   deploy:
@@ -13,26 +13,26 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0  # 获取完整历史记录以支持部署
+          fetch-depth: 0 # 获取完整历史记录以支持部署
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # 使用与本地一致的 Node.js 版本
+          node-version: '18' # 使用与本地一致的 Node.js 版本
 
       - name: Install pnpm
         run: npm install -g pnpm
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile  # 使用锁文件确保一致性
+        run: pnpm install --frozen-lockfile # 使用锁文件确保一致性
 
       - name: Build project
-        run: pnpm run build  # 执行构建命令
+        run: pnpm run build # 执行构建命令
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist  # 构建产物的目录
+          publish_dir: ./dist # 构建产物的目录
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'

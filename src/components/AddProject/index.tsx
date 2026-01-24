@@ -1,5 +1,7 @@
-import { Button, Form, Input, Modal, Select, Space } from 'antd';
+import { addProjectInfo, getBusinessTree, TreeData } from '@/services/business';
+import { Button, Form, Input, message, Modal, Select, Space } from 'antd';
 import React, { useState } from 'react';
+import { useModel } from 'umi';
 import styles from './index.less';
 
 const { Option } = Select;
@@ -15,7 +17,17 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
   const [projectType, setProjectType] = useState<string>('');
   const [showNewLevel1Input, setShowNewLevel1Input] = useState(false);
   const [showNewLevel2Input, setShowNewLevel2Input] = useState(false);
-  const [level2Options, setLevel2Options] = useState<string[]>([]);
+
+  // Use global model for tree data
+  const { treeData, refreshTree } = useModel('business');
+
+  // Local state for filtered L2 options based on selected L1
+  const [currentLevel2Options, setCurrentLevel2Options] = useState<TreeData[]>(
+    [],
+  );
+
+  // Filter Level 1 Nodes
+  const level1Nodes = treeData.filter((node: any) => !node.PARENTID);
 
   const handleProjectTypeChange = (value: string) => {
     setProjectType(value);
@@ -26,31 +38,33 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
       projectParent1: undefined,
       projectParent2: undefined,
     });
-    setLevel2Options([]);
+    setCurrentLevel2Options([]);
   };
 
   const handleLevel1Change = (value: string) => {
+    // Value is ID
     setShowNewLevel1Input(false);
     if (value) {
-      // 根据一级分类更新二级分类选项
-      const options: Record<string, string[]> = {
-        基础运营: ['首页', '客群圈选'],
-        金融中心: ['金融产品', '投资管理'],
-        内容管理平台: ['内容编辑', '内容审核'],
-      };
-      setLevel2Options(options[value] || []);
+      const children = treeData.filter((node: any) => node.PARENTID === value);
+      setCurrentLevel2Options(children);
     } else {
-      setLevel2Options([]);
+      setCurrentLevel2Options([]);
     }
+    // Reset L2 selection
+    form.setFieldsValue({
+      projectParent2: undefined,
+    });
   };
 
   const toggleNewLevel1Input = () => {
     setShowNewLevel1Input(!showNewLevel1Input);
     if (!showNewLevel1Input) {
+      // Switching TO Input mode
       form.setFieldsValue({
         level2Parent: undefined,
         projectParent1: undefined,
       });
+      setCurrentLevel2Options([]); // Clear L2 options as L1 is now "new" (undefined ID so far)
     }
   };
 
@@ -68,43 +82,125 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
     setProjectType('');
     setShowNewLevel1Input(false);
     setShowNewLevel2Input(false);
-    setLevel2Options([]);
+    setCurrentLevel2Options([]);
     onCancel();
   };
 
+  // Helper to find ID by Name and ParentID (from fresh data)
+  const findNodeId = (
+    data: TreeData[],
+    name: string,
+    parentId?: string,
+  ): string | undefined => {
+    return data.find((node) => node.NAME === name && node.PARENTID === parentId)
+      ?.ID;
+  };
+
   const handleSave = () => {
-    form.validateFields().then((values) => {
-      let data: any = {};
+    form.validateFields().then(async (values) => {
+      try {
+        // Helper to check for business errors in 200 OK responses
+        const checkRes = (res: any) => {
+          if (res?.responseData === '服务器内部错误: 项目信息已存在') {
+            const err: any = new Error('项目信息已存在');
+            err.response = { data: res };
+            throw err;
+          }
+        };
 
-      if (projectType === 'level1') {
-        data = { type: 'level1', name: values.level1Name };
-      } else if (projectType === 'level2') {
-        const parent = showNewLevel1Input
-          ? values.newLevel1Name
-          : values.level2Parent;
-        data = {
-          type: 'level2',
-          parent: parent,
-          name: values.level2Name,
-        };
-      } else if (projectType === 'project') {
-        const parent1 = showNewLevel1Input
-          ? values.newProjectLevel1Name
-          : values.projectParent1;
-        const parent2 = showNewLevel2Input
-          ? values.newProjectLevel2Name
-          : values.projectParent2;
-        data = {
-          type: 'project',
-          parent1: parent1,
-          parent2: parent2,
-          name: values.projectName,
-          uuid: values.projectUuid || '',
-        };
+        if (projectType === 'level1') {
+          const res = await addProjectInfo({
+            level: 1,
+            name: values.level1Name,
+          });
+          checkRes(res);
+        } else if (projectType === 'level2') {
+          let parentId = values.level2Parent;
+
+          // If new L1, create it first
+          if (showNewLevel1Input) {
+            const l1Name = values.newLevel1Name;
+            const res = await addProjectInfo({ level: 1, name: l1Name });
+            checkRes(res);
+            // We must fetch latest tree to get the new ID
+            const treeRes = await getBusinessTree();
+            const freshTree = treeRes?.responseData || [];
+            parentId = findNodeId(freshTree, l1Name); // Top level has no parentId
+            if (!parentId) throw new Error('Failed to retrieve new Level 1 ID');
+          }
+
+          if (!parentId) throw new Error('一级分类ID缺失');
+
+          const res = await addProjectInfo({
+            level: 2,
+            upid: parentId,
+            name: values.level2Name,
+          });
+          checkRes(res);
+        } else if (projectType === 'project') {
+          let l1Id = values.projectParent1;
+
+          // Step 1: L1
+          if (showNewLevel1Input) {
+            const l1Name = values.newProjectLevel1Name;
+            const res = await addProjectInfo({ level: 1, name: l1Name });
+            checkRes(res);
+            const treeRes = await getBusinessTree();
+            const freshTree = treeRes?.responseData || [];
+            l1Id = findNodeId(freshTree, l1Name);
+            if (!l1Id) throw new Error('Failed to retrieve new Level 1 ID');
+          }
+
+          if (!l1Id) throw new Error('一级分类ID缺失');
+
+          let l2Id = values.projectParent2;
+
+          // Step 2: L2
+          if (showNewLevel2Input) {
+            const l2Name = values.newProjectLevel2Name;
+            // Note: If we just created L1, l1Id is valid. If we picked existing, l1Id is valid.
+            const res = await addProjectInfo({
+              level: 2,
+              upid: l1Id,
+              name: l2Name,
+            });
+            checkRes(res);
+
+            const treeRes = await getBusinessTree();
+            const freshTree = treeRes?.responseData || [];
+            l2Id = findNodeId(freshTree, l2Name, l1Id);
+            if (!l2Id) throw new Error('Failed to retrieve new Level 2 ID');
+          }
+
+          if (!l2Id) throw new Error('二级分类ID缺失');
+
+          // Step 3: Project
+          const res = await addProjectInfo({
+            level: 3,
+            upid: l2Id,
+            name: values.projectName,
+            uuid: values.projectUuid || '',
+          });
+          checkRes(res);
+        }
+
+        message.success('保存成功！');
+        onSave({});
+        handleCancel();
+      } catch (error: any) {
+        console.error(error);
+        if (
+          error?.response?.data?.responseData ===
+            '服务器内部错误: 项目信息已存在' ||
+          error?.message?.includes('项目信息已存在')
+        ) {
+          message.error('项目信息已存在');
+        } else {
+          message.error(error.message || '保存失败');
+        }
+      } finally {
+        await refreshTree();
       }
-
-      onSave(data);
-      handleCancel();
     });
   };
 
@@ -169,16 +265,18 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
                     disabled={showNewLevel1Input}
                     className={styles.formControl}
                   >
-                    <Option value="基础运营">基础运营</Option>
-                    <Option value="金融中心">金融中心</Option>
-                    <Option value="内容管理平台">内容管理平台</Option>
+                    {level1Nodes.map((node: any) => (
+                      <Option key={node.ID} value={node.ID}>
+                        {node.NAME}
+                      </Option>
+                    ))}
                   </Select>
                 </Form.Item>
                 <Button
                   onClick={toggleNewLevel1Input}
                   className={styles.btnInline}
                 >
-                  新增
+                  {showNewLevel1Input ? '取消' : '新增'}
                 </Button>
               </Space.Compact>
               {showNewLevel1Input && (
@@ -230,16 +328,18 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
                     disabled={showNewLevel1Input}
                     className={styles.formControl}
                   >
-                    <Option value="基础运营">基础运营</Option>
-                    <Option value="金融中心">金融中心</Option>
-                    <Option value="内容管理平台">内容管理平台</Option>
+                    {level1Nodes.map((node: any) => (
+                      <Option key={node.ID} value={node.ID}>
+                        {node.NAME}
+                      </Option>
+                    ))}
                   </Select>
                 </Form.Item>
                 <Button
                   onClick={toggleNewLevel1Input}
                   className={styles.btnInline}
                 >
-                  新增
+                  {showNewLevel1Input ? '取消' : '新增'}
                 </Button>
               </Space.Compact>
               {showNewLevel1Input && (
@@ -271,12 +371,15 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
                 >
                   <Select
                     placeholder="请先选择一级项目"
-                    disabled={showNewLevel2Input || !level2Options.length}
+                    disabled={
+                      showNewLevel2Input ||
+                      (!currentLevel2Options.length && !showNewLevel1Input)
+                    }
                     className={styles.formControl}
                   >
-                    {level2Options.map((option) => (
-                      <Option key={option} value={option}>
-                        {option}
+                    {currentLevel2Options.map((option) => (
+                      <Option key={option.ID} value={option.ID}>
+                        {option.NAME}
                       </Option>
                     ))}
                   </Select>
@@ -284,8 +387,11 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
                 <Button
                   onClick={toggleNewLevel2Input}
                   className={styles.btnInline}
+                  disabled={
+                    !showNewLevel1Input && !form.getFieldValue('projectParent1')
+                  } // Disable if L1 not selected (unless L1 is new)
                 >
-                  新增
+                  {showNewLevel2Input ? '取消' : '新增'}
                 </Button>
               </Space.Compact>
               {showNewLevel2Input && (
@@ -308,11 +414,14 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
               name="projectName"
               rules={[{ required: true, message: '请输入项目名称' }]}
             >
-              <Input placeholder="XXXXX" className={styles.formControl} />
+              <Input
+                placeholder="请输入项目名称"
+                className={styles.formControl}
+              />
             </Form.Item>
             <Form.Item label="项目uuid" name="projectUuid">
               <Input
-                placeholder="yy0911-zuizhong"
+                placeholder="请输入项目uuid"
                 className={styles.formControl}
               />
             </Form.Item>

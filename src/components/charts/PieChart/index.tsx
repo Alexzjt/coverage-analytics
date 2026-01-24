@@ -16,15 +16,6 @@ const PieChart: React.FC<PieChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // 默认数据
-  const defaultData = [
-    { value: 18, name: '投顾项目', itemStyle: { color: '#1890ff' } },
-    { value: 10, name: '赛事项目', itemStyle: { color: '#36cfc9' } },
-    { value: 19, name: '金融中心', itemStyle: { color: '#52c41a' } },
-    { value: 6, name: '内容管理平台', itemStyle: { color: '#73d13d' } },
-    { value: 5, name: '基础运营', itemStyle: { color: '#13c2c2' } },
-  ];
-
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -45,13 +36,24 @@ const PieChart: React.FC<PieChartProps> = ({
         itemWidth: 16,
         itemHeight: 16,
       },
+      color: [
+        '#5470c6',
+        '#91cc75',
+        '#fac858',
+        '#ee6666',
+        '#73c0de',
+        '#3ba272',
+        '#fc8452',
+        '#9a60b4',
+        '#ea7ccc',
+      ],
       series: [
         {
           name: '项目数量',
           type: 'pie',
-          radius: ['40%', '70%'],
+          radius: ['35%', '50%'],
           center: ['60%', '50%'],
-          avoidLabelOverlap: false,
+          avoidLabelOverlap: true,
           itemStyle: {
             borderRadius: 4,
             borderColor: '#fff',
@@ -60,13 +62,15 @@ const PieChart: React.FC<PieChartProps> = ({
           label: {
             show: true,
             formatter: '{b}: {c}',
+            width: 100,
+            overflow: 'break',
           },
           emphasis: {
             label: {
               show: true,
             },
           },
-          data: data || defaultData,
+          data: data || [],
         },
       ],
     };

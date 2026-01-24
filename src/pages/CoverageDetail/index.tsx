@@ -1,83 +1,67 @@
 import {
+  getProjectDetails,
+  ProjectDetailItem,
+} from '@/services/business';
+import {
   ActionType,
   PageContainer,
   ProColumns, // 使用 ProColumns 类型定义更准确
   ProTable,
 } from '@ant-design/pro-components';
-import React, { useRef } from 'react';
-import { useSearchParams } from 'umi';
-
-// 1. 定义数据类型
-interface DataItem {
-  id: string;
-  projectName: string;
-  firstLevel: string;
-  secondLevel: string;
-  createTime: string;
-  lineCoverage: number;
-  branchCoverage: number;
-}
-
-// 2. 生成 20 条 Mock 数据
-const MOCK_DATA: DataItem[] = Array.from({ length: 20 }).map((_, i) => {
-  const categories = ['基础架构', '业务前端', '数据中台', 'AI 研发'];
-  const subCategories = ['组件库', '营销活动', '数据大屏', '模型训练'];
-
-  return {
-    id: `${i + 1}`,
-    projectName: `项目_${i + 1}`,
-    firstLevel: categories[i % 4],
-    secondLevel: subCategories[i % 4],
-    // 模拟不同的时间
-    createTime:
-      new Date(new Date().getTime() - Math.floor(Math.random() * 10000000000))
-        .toISOString()
-        .split('T')[0] +
-      ' ' +
-      new Date().toTimeString().split(' ')[0],
-    // 模拟不同的覆盖率 (0-100)
-    lineCoverage: Number((Math.random() * 100).toFixed(2)),
-    branchCoverage: Number((Math.random() * 100).toFixed(2)),
-  };
-});
+import React, { useRef, useState, useEffect } from 'react';
+import { useSearchParams, useModel } from 'umi';
 
 const TableList: React.FC = () => {
   const actionRef = useRef<ActionType>();
   let [searchParams] = useSearchParams();
+  const [firstLevelOptions, setFirstLevelOptions] = useState<Record<string, { text: string }>>({});
+  const { treeData } = useModel('business');
 
-  const columns: ProColumns<DataItem>[] = [
+  useEffect(() => {
+    if (treeData?.length > 0) {
+      const options: Record<string, { text: string }> = {};
+      treeData.forEach((item: any) => {
+        if (!item.PARENTID) {
+          options[item.NAME] = { text: item.NAME };
+        }
+      });
+      setFirstLevelOptions(options);
+    }
+  }, [treeData]);
+
+
+  const columns: ProColumns<ProjectDetailItem>[] = [
     {
       title: '项目名称',
-      dataIndex: 'projectName',
+      dataIndex: 'NAME',
       formItemProps: {
         label: '项目名称(关键字)',
       },
       sorter: true,
+      defaultSortOrder: searchParams.get('sortBy') === 'name' ? 'descend' : undefined,
+      render: (_, record) => {
+        return record.jumpUrl ? <a href={record.jumpUrl} target="_blank" rel="noreferrer">{record.NAME}</a> : record.NAME;
+      }
     },
     {
       title: '所属一级分类',
-      dataIndex: 'firstLevel',
+      dataIndex: 'GRANDPARENTNAME',
       valueType: 'select',
-      // 增加 valueEnum 以便搜索栏下拉选择
-      valueEnum: {
-        基础架构: { text: '基础架构' },
-        业务前端: { text: '业务前端' },
-        数据中台: { text: '数据中台' },
-        'AI 研发': { text: 'AI 研发' },
-      },
+      valueEnum: firstLevelOptions,
       sorter: true, // 开启排序
       defaultSortOrder:
         searchParams.get('sortBy') === 'firstLevel' ? 'descend' : undefined,
     },
     {
       title: '所属二级分类',
-      dataIndex: 'secondLevel',
+      dataIndex: 'PARENTNAME',
       hideInSearch: true,
       sorter: true, // 开启排序
+      defaultSortOrder: searchParams.get('sortBy') === 'parentName' ? 'descend' : undefined,
     },
     {
       title: '创建时间',
-      dataIndex: 'createTime',
+      dataIndex: 'CREATETIME',
       valueType: 'dateTime',
       hideInSearch: true,
       sorter: true, // 开启排序
@@ -87,21 +71,23 @@ const TableList: React.FC = () => {
     },
     {
       title: '行覆盖率',
-      dataIndex: 'lineCoverage',
+      dataIndex: 'LINECOVERAGE',
       hideInSearch: true,
       sorter: true, // 开启排序
       width: 150,
-      render: (_, record) => `${record.lineCoverage}%`,
+      render: (_, record) => `${record.LINECOVERAGE}%`,
       defaultSortOrder:
         searchParams.get('sortBy') === 'lineCoverage' ? 'descend' : undefined,
     },
     {
       title: '分支覆盖率',
-      dataIndex: 'branchCoverage',
+      dataIndex: 'BRANCHCOVERAGE',
       hideInSearch: true,
       sorter: true, // 开启排序
       width: 150,
-      render: (_, record) => `${record.branchCoverage}%`,
+      render: (_, record) => `${record.BRANCHCOVERAGE}%`,
+      defaultSortOrder:
+        searchParams.get('sortBy') === 'branchCoverage' ? 'descend' : undefined,
     },
   ];
 
@@ -111,71 +97,68 @@ const TableList: React.FC = () => {
         title: '覆盖率详情',
       }}
     >
-      <ProTable<DataItem>
+      <ProTable<ProjectDetailItem>
         actionRef={actionRef}
-        rowKey="id"
+        rowKey="RN"
         search={{
           labelWidth: 120,
         }}
         toolBarRender={false}
         request={async (params, sorter, filter) => {
-          console.log(
-            'Request Params:',
-            params,
-            'Sorter:',
-            sorter,
-            'Filter:',
-            filter,
-          );
+          console.log('Request Params:', params, 'Sorter:', sorter, 'Filter:', filter);
 
-          let dataSource = [...MOCK_DATA];
+          const apiParams: any = {
+            projectName: params.NAME, // Use the correct dataIndex for search params? ProTable passes the key from columns.
+            // Wait, dataIndex is NAME, but search param should be mapped.
+            // ProTable uses the dataIndex as the key in 'params'. So params.NAME is the value.
+            // But my API expects 'projectName'.
+            // And params.GRANDPARENTNAME -> 'firstLevelCategory'.
+          };
 
-          // 1. 过滤逻辑 (Filter)
-          if (params.projectName) {
-            dataSource = dataSource.filter((item) =>
-              item.projectName.includes(params.projectName!),
-            );
+          // Map ProTable params to API params
+          if (params.NAME) {
+            apiParams.projectName = params.NAME;
           }
-          if (params.firstLevel) {
-            dataSource = dataSource.filter(
-              (item) => item.firstLevel === params.firstLevel,
-            );
+          if (params.GRANDPARENTNAME) {
+            apiParams.firstLevelCategory = params.GRANDPARENTNAME;
           }
 
-          // 2. 排序逻辑 (Sort)
-          // sorter 格式通常为: { createTime: 'ascend' } 或 {}
+          // Handle Sorter
+          // sorter can be {} or { field: 'ascend'/'descend' }
           const sortKeys = Object.keys(sorter);
           if (sortKeys.length > 0) {
-            const key = sortKeys[0]; // 获取排序字段，例如 'lineCoverage'
-            const order = sorter[key]; // 获取排序方式 'ascend' | 'descend'
+            const key = sortKeys[0];
+            const order = sorter[key];
 
-            dataSource.sort((a, b) => {
-              const valueA = a[key as keyof DataItem];
-              const valueB = b[key as keyof DataItem];
+            // Map column keys to API 'sortby' values
+            const sortMap: Record<string, string> = {
+              NAME: 'name',
+              PARENTNAME: 'parentName',
+              GRANDPARENTNAME: 'grandParentName',
+              LINECOVERAGE: 'lineCoverage',
+              BRANCHCOVERAGE: 'branchCoverage',
+              CREATETIME: 'createtime'
+            };
 
-              // 处理数字类型
-              if (typeof valueA === 'number' && typeof valueB === 'number') {
-                return order === 'ascend' ? valueA - valueB : valueB - valueA;
-              }
-
-              // 处理字符串或日期字符串
-              const strA = String(valueA);
-              const strB = String(valueB);
-              if (order === 'ascend') {
-                return strA.localeCompare(strB);
-              } else {
-                return strB.localeCompare(strA);
-              }
-            });
+            apiParams.sortby = sortMap[key] || key;
+            apiParams.order = order === 'ascend' ? 2 : 1; // 1 for desc (default? user said 1 or 2. "order(1或者2）". 
+            // User said: "/api/business/project/details/all?sortby=name&order=1 - 按项目名称从高到低排序" -> 1 is DESC.
+            // So ASC should be 2.
+            // Default (no order param) is TGID ASC.
           }
 
-          // 3. 分页逻辑 (Pagination)
+          const res = await getProjectDetails(apiParams);
+          let dataSource = res?.responseData || [];
+
+          // Since API returns ALL data, we might need client-side pagination if standard Table pagination is expected.
+          // Yet ProTable typically handles this if we return 'data' and 'total'. 
+          // If we want client-side pagination with full data, we can slice it here.
+
           const current = params.current || 1;
           const pageSize = params.pageSize || 20;
           const total = dataSource.length;
           const startIndex = (current - 1) * pageSize;
           const endIndex = startIndex + pageSize;
-
           const pageData = dataSource.slice(startIndex, endIndex);
 
           return {

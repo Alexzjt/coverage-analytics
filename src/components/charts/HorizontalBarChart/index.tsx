@@ -6,7 +6,7 @@ interface HorizontalBarChartProps {
   title?: string;
   data?: {
     lineCoverage: number[];
-    instructionCoverage: number[];
+    branchCoverage: number[];
   };
   yAxisData?: string[];
   onClick?: (e: any) => void;
@@ -21,13 +21,6 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // 默认数据
-  const defaultYAxisData = ['XXXX', 'XXX', 'XXX', 'XXXX', 'XXXXX', 'XXXXX'];
-  const defaultData = {
-    lineCoverage: [72, 68, 48, 42, 36, 32],
-    instructionCoverage: [58, 52, 38, 32, 28, 24],
-  };
-
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -36,7 +29,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
       chartInstance.current = echarts.init(chartRef.current);
     }
 
-    const chartData = data || defaultData;
+    const chartData = data || { lineCoverage: [], branchCoverage: [] };
 
     const option: echarts.EChartsOption = {
       tooltip: {
@@ -44,9 +37,22 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
         axisPointer: {
           type: 'shadow',
         },
+        formatter: (params: any) => {
+          let res = params[0].name + '<br/>';
+          params.forEach((item: any) => {
+            res +=
+              item.marker +
+              ' ' +
+              item.seriesName +
+              ': ' +
+              item.value +
+              ' %<br/>';
+          });
+          return res;
+        },
       },
       legend: {
-        data: ['行覆盖率', '指令覆盖率'],
+        data: ['行覆盖率', '分支覆盖率'],
         top: 10,
       },
       grid: {
@@ -59,9 +65,11 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
       xAxis: {
         type: 'value',
         min: 0,
-        max: 80,
-        interval: 10,
-        axisLabel: {},
+        max: 100,
+        interval: 20,
+        axisLabel: {
+          formatter: '{value} %',
+        },
         axisLine: {
           lineStyle: {
             color: '#d9d9d9',
@@ -75,7 +83,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
       },
       yAxis: {
         type: 'category',
-        data: yAxisData || defaultYAxisData,
+        data: yAxisData || [],
         axisLabel: {},
         axisLine: {
           lineStyle: {
@@ -93,9 +101,9 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
           },
         },
         {
-          name: '指令覆盖率',
+          name: '分支覆盖率',
           type: 'bar',
-          data: chartData.instructionCoverage,
+          data: chartData.branchCoverage,
           itemStyle: {
             color: '#36cfc9',
           },

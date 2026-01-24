@@ -1,6 +1,7 @@
 import { Button, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useModel } from 'umi';
 import styles from './index.less';
 
 interface ProjectTreeProps {
@@ -13,59 +14,53 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
   onSelect,
 }) => {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>(['homepage']);
+  const [formattedTreeData, setFormattedTreeData] = useState<DataNode[]>([]);
 
-  // 树形数据
-  const treeData: DataNode[] = [
-    {
-      title: '基础运营',
-      key: 'basic-operation',
-      children: [
-        {
-          title: '首页homepage',
-          key: 'homepage',
-        },
-        {
-          title: '客群圈选',
-          key: 'customer-selection',
-          children: [
-            {
-              title: '30056客群圈选模块测试',
-              key: '30056-test',
-            },
-            {
-              title: '.........',
-              key: 'customer-selection-other',
-            },
-          ],
-        },
-      ],
-    },
-    {
-      title: '内容管理平台',
-      key: 'content-management',
-      children: [
-        {
-          title: '.........',
-          key: 'content-other',
-        },
-      ],
-    },
-    {
-      title: '金融中心',
-      key: 'finance-center',
-      children: [
-        {
-          title: '.........',
-          key: 'finance-other',
-        },
-      ],
-    },
-  ];
+  const { treeData } = useModel('business');
 
-  const handleSelect = (keys: React.Key[]) => {
+  const transformDataToTree = (data: any[]): DataNode[] => {
+    const map: Record<string, any> = {};
+    const roots: DataNode[] = [];
+
+    // First pass: create nodes and map them
+    data.forEach((item) => {
+      map[item.ID] = {
+        title: item.NAME,
+        key: item.ID,
+        jumpUrl: item.jumpUrl,
+        children: [],
+      };
+    });
+
+    // Second pass: link parents and children
+    data.forEach((item) => {
+      const node = map[item.ID];
+      if (item.PARENTID && map[item.PARENTID]) {
+        map[item.PARENTID].children.push(node);
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
+  useEffect(() => {
+    if (treeData && treeData.length > 0) {
+      const formattedData = transformDataToTree(treeData);
+      setFormattedTreeData(formattedData);
+    }
+  }, [treeData]);
+
+  const handleSelect = (keys: React.Key[], info: any) => {
     setSelectedKeys(keys);
     onSelect?.(keys);
-    window.open(`http://10.80.232.101:8899/${keys[0]}/index.html`, '_blank');
+
+    // Check if the selected node has a jumpUrl
+    const selectedNode = info.node;
+    if (selectedNode?.jumpUrl) {
+      window.open(selectedNode.jumpUrl, '_blank');
+    }
   };
 
   return (
@@ -81,13 +76,15 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
         </Button>
       </div>
       <div className={styles.treeMenu}>
-        <Tree
-          treeData={treeData}
-          selectedKeys={selectedKeys}
-          onSelect={handleSelect}
-          defaultExpandAll
-          blockNode
-        />
+        {formattedTreeData.length > 0 && (
+          <Tree
+            treeData={formattedTreeData}
+            selectedKeys={selectedKeys}
+            onSelect={handleSelect}
+            defaultExpandAll
+            blockNode
+          />
+        )}
       </div>
     </div>
   );
