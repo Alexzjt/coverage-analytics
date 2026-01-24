@@ -99,38 +99,54 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
   const handleSave = () => {
     form.validateFields().then(async (values) => {
       try {
+        // Helper to check for business errors in 200 OK responses
+        const checkRes = (res: any) => {
+          if (res?.responseData === '服务器内部错误: 项目信息已存在') {
+            const err: any = new Error('项目信息已存在');
+            err.response = { data: res };
+            throw err;
+          }
+        };
+
         if (projectType === 'level1') {
-          await addProjectInfo({ level: 1, name: values.level1Name });
+          const res = await addProjectInfo({
+            level: 1,
+            name: values.level1Name,
+          });
+          checkRes(res);
         } else if (projectType === 'level2') {
           let parentId = values.level2Parent;
 
           // If new L1, create it first
           if (showNewLevel1Input) {
             const l1Name = values.newLevel1Name;
-            await addProjectInfo({ level: 1, name: l1Name });
+            const res = await addProjectInfo({ level: 1, name: l1Name });
+            checkRes(res);
             // We must fetch latest tree to get the new ID
-            const res = await getBusinessTree();
-            const freshTree = res?.responseData || [];
+            const treeRes = await getBusinessTree();
+            const freshTree = treeRes?.responseData || [];
             parentId = findNodeId(freshTree, l1Name); // Top level has no parentId
             if (!parentId) throw new Error('Failed to retrieve new Level 1 ID');
           }
 
           if (!parentId) throw new Error('一级分类ID缺失');
 
-          await addProjectInfo({
+          const res = await addProjectInfo({
             level: 2,
             upid: parentId,
             name: values.level2Name,
           });
+          checkRes(res);
         } else if (projectType === 'project') {
           let l1Id = values.projectParent1;
 
           // Step 1: L1
           if (showNewLevel1Input) {
             const l1Name = values.newProjectLevel1Name;
-            await addProjectInfo({ level: 1, name: l1Name });
-            const res = await getBusinessTree();
-            const freshTree = res?.responseData || [];
+            const res = await addProjectInfo({ level: 1, name: l1Name });
+            checkRes(res);
+            const treeRes = await getBusinessTree();
+            const freshTree = treeRes?.responseData || [];
             l1Id = findNodeId(freshTree, l1Name);
             if (!l1Id) throw new Error('Failed to retrieve new Level 1 ID');
           }
@@ -143,10 +159,15 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
           if (showNewLevel2Input) {
             const l2Name = values.newProjectLevel2Name;
             // Note: If we just created L1, l1Id is valid. If we picked existing, l1Id is valid.
-            await addProjectInfo({ level: 2, upid: l1Id, name: l2Name });
+            const res = await addProjectInfo({
+              level: 2,
+              upid: l1Id,
+              name: l2Name,
+            });
+            checkRes(res);
 
-            const res = await getBusinessTree();
-            const freshTree = res?.responseData || [];
+            const treeRes = await getBusinessTree();
+            const freshTree = treeRes?.responseData || [];
             l2Id = findNodeId(freshTree, l2Name, l1Id);
             if (!l2Id) throw new Error('Failed to retrieve new Level 2 ID');
           }
@@ -154,12 +175,13 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
           if (!l2Id) throw new Error('二级分类ID缺失');
 
           // Step 3: Project
-          await addProjectInfo({
+          const res = await addProjectInfo({
             level: 3,
             upid: l2Id,
             name: values.projectName,
             uuid: values.projectUuid || '',
           });
+          checkRes(res);
         }
 
         message.success('保存成功！');
@@ -168,7 +190,8 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
       } catch (error: any) {
         console.error(error);
         if (
-          error?.response?.data === '服务器内部错误: 项目信息已存在' ||
+          error?.response?.data?.responseData ===
+            '服务器内部错误: 项目信息已存在' ||
           error?.message?.includes('项目信息已存在')
         ) {
           message.error('项目信息已存在');

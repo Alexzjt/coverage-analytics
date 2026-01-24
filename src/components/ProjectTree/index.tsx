@@ -1,7 +1,7 @@
 import { Button, Tree } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import React, { useEffect, useState } from 'react';
-import { getBusinessTree } from '../../services/business';
+import { useModel } from 'umi';
 import styles from './index.less';
 
 interface ProjectTreeProps {
@@ -14,7 +14,9 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
   onSelect,
 }) => {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>(['homepage']);
-  const [treeData, setTreeData] = useState<DataNode[]>([]);
+  const [formattedTreeData, setFormattedTreeData] = useState<DataNode[]>([]);
+
+  const { treeData } = useModel('business');
 
   const transformDataToTree = (data: any[]): DataNode[] => {
     const map: Record<string, any> = {};
@@ -44,13 +46,11 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
   };
 
   useEffect(() => {
-    getBusinessTree().then((res) => {
-      if (res?.responseData) {
-        const formattedData = transformDataToTree(res.responseData);
-        setTreeData(formattedData);
-      }
-    });
-  }, []);
+    if (treeData && treeData.length > 0) {
+      const formattedData = transformDataToTree(treeData);
+      setFormattedTreeData(formattedData);
+    }
+  }, [treeData]);
 
   const handleSelect = (keys: React.Key[], info: any) => {
     setSelectedKeys(keys);
@@ -76,9 +76,9 @@ const ProjectTree: React.FC<ProjectTreeProps> = ({
         </Button>
       </div>
       <div className={styles.treeMenu}>
-        {treeData.length > 0 && (
+        {formattedTreeData.length > 0 && (
           <Tree
-            treeData={treeData}
+            treeData={formattedTreeData}
             selectedKeys={selectedKeys}
             onSelect={handleSelect}
             defaultExpandAll
