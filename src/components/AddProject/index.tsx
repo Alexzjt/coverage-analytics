@@ -101,10 +101,6 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
       try {
         if (projectType === 'level1') {
           await addProjectInfo({ level: 1, name: values.level1Name });
-          message.success('保存成功！');
-          await refreshTree();
-          onSave({}); // Callback just to close/refresh
-          handleCancel();
         } else if (projectType === 'level2') {
           let parentId = values.level2Parent;
 
@@ -117,8 +113,6 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
             const freshTree = res?.responseData || [];
             parentId = findNodeId(freshTree, l1Name); // Top level has no parentId
             if (!parentId) throw new Error('Failed to retrieve new Level 1 ID');
-            // Optional: update global tree now or later
-            refreshTree();
           }
 
           if (!parentId) throw new Error('一级分类ID缺失');
@@ -128,10 +122,6 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
             upid: parentId,
             name: values.level2Name,
           });
-          message.success('保存成功！');
-          await refreshTree();
-          onSave({});
-          handleCancel();
         } else if (projectType === 'project') {
           let l1Id = values.projectParent1;
 
@@ -143,7 +133,6 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
             const freshTree = res?.responseData || [];
             l1Id = findNodeId(freshTree, l1Name);
             if (!l1Id) throw new Error('Failed to retrieve new Level 1 ID');
-            refreshTree();
           }
 
           if (!l1Id) throw new Error('一级分类ID缺失');
@@ -160,7 +149,6 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
             const freshTree = res?.responseData || [];
             l2Id = findNodeId(freshTree, l2Name, l1Id);
             if (!l2Id) throw new Error('Failed to retrieve new Level 2 ID');
-            refreshTree();
           }
 
           if (!l2Id) throw new Error('二级分类ID缺失');
@@ -172,12 +160,11 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
             name: values.projectName,
             uuid: values.projectUuid || '',
           });
-
-          message.success('保存成功！');
-          await refreshTree();
-          onSave({});
-          handleCancel();
         }
+
+        message.success('保存成功！');
+        onSave({});
+        handleCancel();
       } catch (error: any) {
         console.error(error);
         if (
@@ -188,6 +175,8 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
         } else {
           message.error(error.message || '保存失败');
         }
+      } finally {
+        await refreshTree();
       }
     });
   };

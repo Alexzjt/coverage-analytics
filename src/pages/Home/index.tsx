@@ -4,12 +4,7 @@ import HorizontalBarChart from '@/components/charts/HorizontalBarChart';
 import LineChart from '@/components/charts/LineChart';
 import PieChart from '@/components/charts/PieChart';
 import ProjectTree from '@/components/ProjectTree';
-import {
-  addProjectInfo,
-  AddProjectParams,
-  getChartData,
-} from '@/services/business';
-import { message } from 'antd';
+import { AddProjectParams, getChartData } from '@/services/business';
 import React, { useEffect, useState } from 'react';
 import SplitPane from 'react-split-pane';
 import { history, useModel } from 'umi';
@@ -100,19 +95,11 @@ const HomePage: React.FC = () => {
   };
 
   const handleSave = async (data: AddProjectParams) => {
-    console.log('保存数据:', data);
-    try {
-      const res = await addProjectInfo(data);
-      if (res?.responseData === '服务器内部错误: 项目信息已存在') {
-        message.error('项目信息已存在');
-      } else {
-        message.success('保存成功！');
-        refreshTree();
-      }
-    } catch (error) {
-      // console.error(error);
-      // message.error('保存失败');
-    }
+    // AddProject component now handles the actual API calls (including chained calls).
+    // This callback is just for successful completion cleanup.
+    console.log('保存成功回调:', data);
+    setAddProjectVisible(false);
+    refreshTree();
   };
 
   const handleTreeSelect = (selectedKeys: React.Key[]) => {
