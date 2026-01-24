@@ -25,7 +25,7 @@ const HomePage: React.FC = () => {
     data: { lineCoverage: number[]; branchCoverage: number[] };
     yAxisData: string[];
   }>({ data: { lineCoverage: [], branchCoverage: [] }, yAxisData: [] });
-  const { refreshTree } = useModel('business');
+  const { treeData, refreshTree } = useModel('business');
 
   useEffect(() => {
     // 0. Tree Data is handled by model
@@ -84,7 +84,7 @@ const HomePage: React.FC = () => {
         setHBarData({ yAxisData, data: { lineCoverage, branchCoverage } });
       }
     });
-  }, []);
+  }, [treeData]);
 
   const handleNewProject = () => {
     setAddProjectVisible(true);
