@@ -51,8 +51,8 @@ const PieChart: React.FC<PieChartProps> = ({
         {
           name: '项目数量',
           type: 'pie',
-          radius: ['35%', '60%'],
-          center: ['50%', '50%'],
+          radius: ['35%', '50%'],
+          center: ['60%', '50%'],
           avoidLabelOverlap: true,
           itemStyle: {
             borderRadius: 4,
@@ -62,6 +62,8 @@ const PieChart: React.FC<PieChartProps> = ({
           label: {
             show: true,
             formatter: '{b}: {c}',
+            width: 100,
+            overflow: 'break',
           },
           emphasis: {
             label: {
