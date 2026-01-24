@@ -6,7 +6,7 @@ interface BarChartProps {
   title?: string;
   data?: {
     lineCoverage: number[];
-    instructionCoverage: number[];
+    branchCoverage: number[];
   };
   xAxisData?: string[];
   onClick?: (e: any) => void;
@@ -21,12 +21,7 @@ const BarChart: React.FC<BarChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // 默认数据
-  const defaultXAxisData = ['XXX', 'XXX', '最近XX项目'];
-  const defaultData = {
-    lineCoverage: [56, 46, 41],
-    instructionCoverage: [34, 29, 26],
-  };
+
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -36,7 +31,7 @@ const BarChart: React.FC<BarChartProps> = ({
       chartInstance.current = echarts.init(chartRef.current);
     }
 
-    const chartData = data || defaultData;
+    const chartData = data || { lineCoverage: [], branchCoverage: [] };
 
     const option: echarts.EChartsOption = {
       tooltip: {
@@ -46,7 +41,7 @@ const BarChart: React.FC<BarChartProps> = ({
         },
       },
       legend: {
-        data: ['行覆盖率', '指令覆盖率'],
+        data: ['行覆盖率', '分支覆盖率'],
         top: 10,
       },
       grid: {
@@ -58,7 +53,7 @@ const BarChart: React.FC<BarChartProps> = ({
       },
       xAxis: {
         type: 'category',
-        data: xAxisData || defaultXAxisData,
+        data: xAxisData || [],
         axisLabel: {},
         axisLine: {
           lineStyle: {
@@ -93,9 +88,9 @@ const BarChart: React.FC<BarChartProps> = ({
           },
         },
         {
-          name: '指令覆盖率',
+          name: '分支覆盖率',
           type: 'bar',
-          data: chartData.instructionCoverage,
+          data: chartData.branchCoverage,
           itemStyle: {
             color: '#36cfc9',
           },

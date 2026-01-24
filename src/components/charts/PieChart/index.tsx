@@ -16,14 +16,7 @@ const PieChart: React.FC<PieChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // 默认数据
-  const defaultData = [
-    { value: 18, name: '投顾项目', itemStyle: { color: '#1890ff' } },
-    { value: 10, name: '赛事项目', itemStyle: { color: '#36cfc9' } },
-    { value: 19, name: '金融中心', itemStyle: { color: '#52c41a' } },
-    { value: 6, name: '内容管理平台', itemStyle: { color: '#73d13d' } },
-    { value: 5, name: '基础运营', itemStyle: { color: '#13c2c2' } },
-  ];
+
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -66,7 +59,7 @@ const PieChart: React.FC<PieChartProps> = ({
               show: true,
             },
           },
-          data: data || defaultData,
+          data: data || [],
         },
       ],
     };

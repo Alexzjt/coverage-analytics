@@ -18,9 +18,7 @@ const LineChart: React.FC<LineChartProps> = ({
   const chartRef = useRef<HTMLDivElement>(null);
   const chartInstance = useRef<echarts.ECharts | null>(null);
 
-  // 默认数据
-  const defaultXAxisData = ['一月', '二月', '三月', '四月', '五月', '六月'];
-  const defaultData = [10, 13, 23, 15, 18, 10];
+
 
   useEffect(() => {
     if (!chartRef.current) return;
@@ -48,7 +46,7 @@ const LineChart: React.FC<LineChartProps> = ({
       xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: xAxisData || defaultXAxisData,
+        data: xAxisData || [],
         axisLabel: {},
         axisLine: {
           lineStyle: {
@@ -78,7 +76,7 @@ const LineChart: React.FC<LineChartProps> = ({
           name: '新增项目数',
           type: 'line',
           smooth: true,
-          data: data || defaultData,
+          data: data || [],
           itemStyle: {
             color: '#1890ff',
           },
