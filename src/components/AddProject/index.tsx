@@ -414,11 +414,14 @@ const AddProject: React.FC<AddProjectProps> = ({ open, onCancel, onSave }) => {
               name="projectName"
               rules={[{ required: true, message: '请输入项目名称' }]}
             >
-              <Input placeholder="XXXXX" className={styles.formControl} />
+              <Input
+                placeholder="请输入项目名称"
+                className={styles.formControl}
+              />
             </Form.Item>
             <Form.Item label="项目uuid" name="projectUuid">
               <Input
-                placeholder="yy0911-zuizhong"
+                placeholder="请输入项目uuid"
                 className={styles.formControl}
               />
             </Form.Item>
